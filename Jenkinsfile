@@ -1,15 +1,17 @@
 pipeline {
-  agent {label 'agent'}
-stages {
-          stage('start') {
-            steps {
-              script {
-                    sh 'docker kill $(docker ps -q)'
-                    sh 'docker build -t omarhiggy/hello:lts .'
-                    sh 'docker run -d -p 80:80 omarhiggy/hello:lts'
-              
-            }
-            }
-          }
-}
+  agent any
+    stage('start') {
+      steps {
+        script {
+        withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+          sh """
+              docker login -u ${USERNAME} -p ${PASSWORD}
+              docker build -t $DOCKER_REPO:latest .
+              docker push $DOCKER_REPO:latest
+          """
+        }
+
+      }
+      }
+    }
 }
